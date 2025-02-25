@@ -7,5 +7,6 @@ An online game dedicated to developers. Codegame uses the CLI as its user interf
 - [x] WebSocket game logic
 - [ ] Automated testing (postman is bad for websockets)
 - [ ] Database operations
+- [ ] Containerization
 - [ ] CLI app
 - [ ] Elo rating system
