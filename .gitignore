@@ -1,0 +1,43 @@
+# Build Folders
+bin/
+obj/
+out/
+
+# User-Specific Files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vs/
+.vsconfig
+
+# Logs & Debugging Files
+*.log
+logs/
+TestResults/
+coverage/
+
+# Dependency Caches
+packages/
+node_modules/
+
+# Environment & Configuration Files
+.env
+*.config.user
+secrets.json
+
+# Compiled & Generated Files
+*.dll
+*.exe
+*.pdb
+*.cache
+*.db
+*.log
+*.lock
+
+# Publish Output
+publish/
+wwwroot/
+
