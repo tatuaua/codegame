@@ -28,9 +28,9 @@ public class GameWebSocketHandler
                 PropertyNameCaseInsensitive = true
             };
 
-            var messageObj = JsonSerializer.Deserialize<Message>(receivedMessage, options);
+            var messageObj = JsonSerializer.Deserialize<Message>(receivedMessage, options) ?? throw new Exception();
 
-            var player = CheckLogin(messageObj.Player.Name, messageObj.Player.PassWord);
+            var player = CheckLogin(messageObj.Player.Name, messageObj.Player.PassWord, webSocket);
             if (player == null)
             {
                 await webSocket.SendAsync(Encoding.UTF8.GetBytes("bad password"), WebSocketMessageType.Text, true, System.Threading.CancellationToken.None);
@@ -101,7 +101,7 @@ public class GameWebSocketHandler
     private async Task BugCode(Player player, string code, string gameId)
     {
         var game = ongoingGames.FirstOrDefault(g => g.Id == gameId);
-        if (game != null && game.State == GameBase.GameState.Bugging)
+        if (game != null && game.State == GameBase.GameState.Bugging && game.Player2 != null)
         {
             game.BuggedCode = code;
             game.State = GameBase.GameState.Fixing;
@@ -109,7 +109,7 @@ public class GameWebSocketHandler
         }
     }
 
-    private async Task FixCode(Player player, string code, string gameId)
+    private Task FixCode(Player player, string code, string gameId)
     {
         var game = ongoingGames.FirstOrDefault(g => g.Id == gameId);
         if (game != null && game.State == GameBase.GameState.Fixing)
@@ -118,6 +118,8 @@ public class GameWebSocketHandler
             game.State = GameBase.GameState.Ended;
             ongoingGames.Remove(game);
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task SendCode(string code, WebSocket session)
@@ -134,14 +136,14 @@ public class GameWebSocketHandler
 
     private string GetCode() => "some code\nwith lines\naaaa";
 
-    private Player? CheckLogin(string name, string passWord)
+    private Player? CheckLogin(string name, string passWord, WebSocket session)
     {
         var player = loggedInPlayers.FirstOrDefault(p => p.Name == name);
         if (player != null)
         {
             return player.PassWord == passWord ? player : null;
         }
-        player = new Player { Name = name, PassWord = passWord, Id = Guid.NewGuid().ToString(), IsInGame = false };
+        player = new Player { Name = name, PassWord = passWord, Id = Guid.NewGuid().ToString(), IsInGame = false, Session = session };
         loggedInPlayers.Add(player);
         return player;
     }
@@ -149,11 +151,11 @@ public class GameWebSocketHandler
 
 public class Player
 {
-    public required string Id { get; set; }
-    public required string Name { get; set; }
-    public required string PassWord { get; set; }
-    public required bool IsInGame { get; set; }
-    public WebSocket? Session { get; set; }
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string PassWord { get; set; }
+    public bool IsInGame { get; set; }
+    public WebSocket Session { get; set; }
 }
 
 public class GameBase
@@ -161,7 +163,7 @@ public class GameBase
     public required string Id { get; set; }
     public required Player Player1 { get; set; }
     public Player? Player2 { get; set; }
-    public string? OriginalCode { get; set; }
+    public required string OriginalCode { get; set; }
     public string? BuggedCode { get; set; }
     public string? FixedCode { get; set; }
     public required GameState State { get; set; }
@@ -179,6 +181,6 @@ public class Message
 {
     public required string Action { get; set; }
     public required Player Player { get; set; }
-    public required string GameId { get; set; }
-    public required string Code { get; set; }
+    public string GameId { get; set; }
+    public string Code { get; set; }
 }
