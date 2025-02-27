@@ -1,8 +1,12 @@
 var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+builder.Services.AddLogging();
 
+var app = builder.Build();
 app.UseWebSockets();
-var gameHandler = new GameWebSocketHandler();
+
+// Get logger instance from DI
+var logger = app.Services.GetRequiredService<ILogger<GameWebSocketHandler>>();
+var gameHandler = new GameWebSocketHandler(logger);
 
 app.Use(async (context, next) =>
 {

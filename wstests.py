@@ -37,14 +37,16 @@ async def send_messages():
         # Send Bug Report
         bug_code = "some code\nasd lines\naaaa"
         await ws.send(create_message("bug", "player1", "pass", game_id, bug_code))
-        print("Sent bug report.")
-        print(await ws.recv())
+        print("Sent bug.")
 
         # Fix Bug
         fix_code = "some code\nsd lines\naaaa"
         await ws.send(create_message("fix", "player2", "pass2", game_id, fix_code))
-        print("Sent fix request.")
-        print(await ws.recv())
+        print("Sent fix.")
+
+        await ws.send(create_message("fakeAction", "player2", "pass2"))
+        print("Sent invalid action.")
+        assert "error" in await ws.recv()
 
 # Run the async function
 asyncio.run(send_messages())
