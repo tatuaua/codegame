@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Net.Http;
+using Game.Models;
 
 public class GameWebSocketHandler
 {
@@ -204,40 +205,4 @@ public class GameWebSocketHandler
         loggedInPlayers.Add(player);
         return player;
     }
-}
-
-public class Player
-{
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string PassWord { get; set; }
-    public bool IsInGame { get; set; }
-    public WebSocket Session { get; set; }
-}
-
-public class GameBase
-{
-    public required string Id { get; set; }
-    public required Player Player1 { get; set; }
-    public Player? Player2 { get; set; }
-    public required string OriginalCode { get; set; }
-    public string? BuggedCode { get; set; }
-    public string? FixedCode { get; set; }
-    public required GameState State { get; set; }
-
-    public enum GameState
-    {
-        Created,
-        Bugging,
-        Fixing,
-        Ended
-    }
-}
-
-public class Message
-{
-    public required string Action { get; set; }
-    public required Player Player { get; set; }
-    public string GameId { get; set; }
-    public string Code { get; set; }
 }
