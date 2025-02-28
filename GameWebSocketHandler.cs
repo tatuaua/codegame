@@ -9,16 +9,19 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Net.Http;
 using Game.Models;
+using Game.Database;
 
 public class GameWebSocketHandler
 {
     private static readonly List<Player> loggedInPlayers = new List<Player>();
     private static readonly List<GameBase> ongoingGames = new List<GameBase>();
     private readonly ILogger<GameWebSocketHandler> _logger;
+    private readonly IDatabaseHandler _db;
 
-    public GameWebSocketHandler(ILogger<GameWebSocketHandler> logger)
+    public GameWebSocketHandler(ILogger<GameWebSocketHandler> logger, IDatabaseHandler db)
     {
         _logger = logger;
+        _db = db;
     }
 
     public async Task HandleWebSocket(HttpContext context, WebSocket webSocket)

@@ -1,12 +1,16 @@
+using Game.Database;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLogging();
+builder.Services.AddSingleton<IDatabaseHandler, DatabaseHandler>();
 
 var app = builder.Build();
 app.UseWebSockets();
 
-// Get logger instance from DI
 var logger = app.Services.GetRequiredService<ILogger<GameWebSocketHandler>>();
-var gameHandler = new GameWebSocketHandler(logger);
+var dbHandler = app.Services.GetRequiredService<IDatabaseHandler>();
+
+var gameHandler = new GameWebSocketHandler(logger, dbHandler);
 
 app.Use(async (context, next) =>
 {
