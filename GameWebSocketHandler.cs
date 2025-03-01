@@ -13,8 +13,8 @@ using Game.Database;
 
 public class GameWebSocketHandler
 {
-    private static readonly List<Player> loggedInPlayers = new List<Player>();
-    private static readonly List<GameBase> ongoingGames = new List<GameBase>();
+    private static readonly List<Player> loggedInPlayers = [];
+    private static readonly List<GameBase> ongoingGames = [];
     private readonly ILogger<GameWebSocketHandler> _logger;
     private readonly IDatabaseHandler _db;
 
@@ -35,7 +35,7 @@ public class GameWebSocketHandler
             while (!result.CloseStatus.HasValue)
             {
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                _logger.LogInformation($"Received message: {receivedMessage}");
+                _logger.LogInformation("Received message: {receivedMessage}", receivedMessage);
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -46,7 +46,7 @@ public class GameWebSocketHandler
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"JSON Deserialization Error: {ex.Message}");
+                    _logger.LogError("JSON Deserialization Error: {Message}", ex.Message);
                     await SendError("Invalid request format.", webSocket);
                     return;
                 }
@@ -54,7 +54,7 @@ public class GameWebSocketHandler
                 var player = await CheckLogin(messageObj.Player.Name, messageObj.Player.PassWord, webSocket);
                 if (player == null)
                 {
-                    _logger.LogWarning($"Login failed for player: {messageObj.Player.Name}");
+                    _logger.LogWarning("Login failed for player: {PlayerName}", messageObj.Player.Name);
                     await SendError("Bad password", webSocket);
                     return;
                 }
@@ -81,14 +81,14 @@ public class GameWebSocketHandler
                             await FixCode(player, messageObj.Code, messageObj.GameId);
                             break;
                         default:
-                            _logger.LogWarning($"Unknown action: {messageObj.Action}");
+                            _logger.LogWarning("Unknown action: {Action}", messageObj.Action);
                             await SendError("Unknown action.", webSocket);
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error processing action {messageObj.Action}: {ex.Message}");
+                    _logger.LogError("Error processing action {Action}: {Message}", messageObj.Action, ex.Message);
                     await SendError("Internal server error.", webSocket);
                 }
 
@@ -97,8 +97,8 @@ public class GameWebSocketHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError($"WebSocket error: {ex.Message}");
-            _logger.LogError(ex.StackTrace);
+            _logger.LogError("WebSocket error: {Message}", ex.Message);
+            _logger.LogError("{StackTrace}", ex.StackTrace);
         }
         finally
         {
@@ -193,7 +193,7 @@ public class GameWebSocketHandler
     {
         var json = JsonSerializer.Serialize(new { error });
         await session.SendAsync(Encoding.UTF8.GetBytes(json), WebSocketMessageType.Text, true, System.Threading.CancellationToken.None);
-        _logger.LogWarning($"Sent error response: {error}");
+        _logger.LogWarning("Sent error response: {Error}", error);
     }
     private string GetCode() => "some code\nwith lines\naaaa";
 
