@@ -6,7 +6,7 @@ namespace Game.Database
     {
         public void Init();
         public Task<Player?> GetPlayer(string name);
-        public Task<Player> CreatePlayer(string name, string password);
-        public Task<GameBase> CreateGame(GameBase game);
+        public Task InsertPlayer(Player player);
+        public Task<GameBase> InsertGame(GameBase game);
     }
 }

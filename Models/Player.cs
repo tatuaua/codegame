@@ -9,5 +9,14 @@ namespace Game.Models
         public string PassWord { get; set; }
         public bool IsInGame { get; set; }
         public WebSocket Session { get; set; }
+        public override string ToString()
+        {
+            return $"""
+            Player ID: {Id}
+            Name: {Name}
+            IsInGame: {IsInGame}
+            Session: {(Session?.State.ToString() ?? "None")}
+            """;
+        }
     }
 }

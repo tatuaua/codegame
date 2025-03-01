@@ -17,5 +17,18 @@
             Fixing,
             Ended
         }
+
+        public override string ToString()
+        {
+            return $"""
+            Game ID: {Id}
+            Player1: {Player1}
+            Player2: {(Player2 != null ? Player2.ToString() : "None")}
+            OriginalCode: {OriginalCode}
+            BuggedCode: {(BuggedCode ?? "None")}
+            FixedCode: {(FixedCode ?? "None")}
+            State: {State}
+            """;
+        }
     }
 }

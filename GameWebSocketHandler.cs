@@ -51,7 +51,7 @@ public class GameWebSocketHandler
                     return;
                 }
 
-                var player = CheckLogin(messageObj.Player.Name, messageObj.Player.PassWord, webSocket);
+                var player = await CheckLogin(messageObj.Player.Name, messageObj.Player.PassWord, webSocket);
                 if (player == null)
                 {
                     _logger.LogWarning($"Login failed for player: {messageObj.Player.Name}");
@@ -98,6 +98,7 @@ public class GameWebSocketHandler
         catch (Exception ex)
         {
             _logger.LogError($"WebSocket error: {ex.Message}");
+            _logger.LogError(ex.StackTrace);
         }
         finally
         {
@@ -164,7 +165,7 @@ public class GameWebSocketHandler
         }
     }
 
-    private Task FixCode(Player player, string code, string gameId)
+    private async Task FixCode(Player player, string code, string gameId)
     {
         var game = ongoingGames.FirstOrDefault(g => g.Id == gameId);
         if (game != null && game.State == GameBase.GameState.Fixing)
@@ -172,9 +173,8 @@ public class GameWebSocketHandler
             game.FixedCode = code;
             game.State = GameBase.GameState.Ended;
             ongoingGames.Remove(game);
+            await _db.InsertGame(game);
         }
-
-        return Task.CompletedTask;
     }
 
     private async Task SendCode(string code, WebSocket session)
@@ -197,7 +197,7 @@ public class GameWebSocketHandler
     }
     private string GetCode() => "some code\nwith lines\naaaa";
 
-    private Player? CheckLogin(string name, string passWord, WebSocket session)
+    private async Task<Player?> CheckLogin(string name, string passWord, WebSocket session)
     {
         var player = loggedInPlayers.FirstOrDefault(p => p.Name == name);
         if (player != null)
@@ -206,6 +206,7 @@ public class GameWebSocketHandler
         }
         player = new Player { Name = name, PassWord = passWord, Id = Guid.NewGuid().ToString(), IsInGame = false, Session = session };
         loggedInPlayers.Add(player);
+        await _db.InsertPlayer(player);
         return player;
     }
 }

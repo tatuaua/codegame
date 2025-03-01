@@ -7,21 +7,23 @@ namespace Game.Database
     {
         private static readonly string connString = "Host=localhost;Port=5432;Username=postgres;Password=mypassword;Database=postgres";
         private static bool initialized = false;
+        private readonly ILogger<DatabaseHandler> _logger;
 
         NpgsqlConnection conn = new NpgsqlConnection(connString);
 
-        public DatabaseHandler()
+        public DatabaseHandler(ILogger<DatabaseHandler> logger)
         {
             if (initialized) throw new InvalidOperationException("Database already initialized, inject the service instead");
             Init();
             initialized = true;
+            this._logger = logger;
         }
 
         public void Init()
         {
             try
             {
-                CreateTablesIfNotExist();
+                CreateTables();
                 Console.WriteLine("Initialized PostgreSQL database.");
             }
             catch (Exception ex)
@@ -34,40 +36,48 @@ namespace Game.Database
             }
         }
 
-        private void CreateTablesIfNotExist()
+        private void CreateTables()
         {
-            const string createPlayersTableQuery = @"CREATE TABLE IF NOT EXISTS players (
-                id UUID PRIMARY KEY,
+            const string dropGames = @"DROP TABLE games;";
+            const string dropPlayers = @"DROP TABLE players;";
+
+            const string createPlayersTableQuery = @"CREATE TABLE players (
+                id TEXT PRIMARY KEY,
                 name TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL
             );";
 
-            const string createGamesTableQuery = @"CREATE TABLE IF NOT EXISTS games (
-                id UUID PRIMARY KEY,
-                player1 UUID NOT NULL REFERENCES players(id),
-                player2 UUID REFERENCES players(id),
+            const string createGamesTableQuery = @"CREATE TABLE games (
+                id TEXT PRIMARY KEY,
+                player1 TEXT NOT NULL REFERENCES players(id),
+                player2 TEXT NOT NULL REFERENCES players(id),
                 original_code TEXT NOT NULL,
                 bugged_code TEXT,
                 fixed_code TEXT
             );";
 
-            using var command = new NpgsqlCommand(createPlayersTableQuery, conn);
+            using var command = new NpgsqlCommand(dropGames, conn);
             conn.Open();
+            command.ExecuteNonQuery();
+            command.CommandText = dropPlayers;
+            command.ExecuteNonQuery();
+            command.CommandText = createPlayersTableQuery;
             command.ExecuteNonQuery();
             command.CommandText = createGamesTableQuery;
             command.ExecuteNonQuery();
             conn.Close();
         }
 
-        public async Task<GameBase> CreateGame(GameBase game)
+        public async Task<GameBase> InsertGame(GameBase game)
         {
+            _logger.LogInformation("Inserting game: {game}", game.ToString());
             const string query = "INSERT INTO games (id, player1, player2, original_code, bugged_code, fixed_code) " +
                                  "VALUES (@id, @player1, @player2, @original_code, @bugged_code, @fixed_code)";
 
             await using var command = new NpgsqlCommand(query, conn);
             command.Parameters.AddWithValue("@id", game.Id);
             command.Parameters.AddWithValue("@player1", game.Player1.Id);
-            command.Parameters.AddWithValue("@player2", game.Player2?.Id ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@player2", game.Player2.Id);
             command.Parameters.AddWithValue("@original_code", game.OriginalCode);
             command.Parameters.AddWithValue("@bugged_code", game.BuggedCode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@fixed_code", game.FixedCode ?? (object)DBNull.Value);
@@ -79,9 +89,8 @@ namespace Game.Database
             return game;
         }
 
-        public async Task<Player> CreatePlayer(string name, string password)
+        public async Task InsertPlayer(Player player)
         {
-            var player = new Player { Id = Guid.NewGuid().ToString(), Name = name, PassWord = password, IsInGame = false, Session = null };
             const string query = "INSERT INTO players (id, name, password) VALUES (@id, @name, @password)";
 
             await using var command = new NpgsqlCommand(query, conn);
@@ -92,8 +101,6 @@ namespace Game.Database
             await conn.OpenAsync();
             await command.ExecuteNonQueryAsync();
             await conn.CloseAsync();
-
-            return player;
         }
 
         public async Task<Player?> GetPlayer(string name)
