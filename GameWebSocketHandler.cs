@@ -173,7 +173,14 @@ public class GameWebSocketHandler
             game.FixedCode = code;
             game.State = GameBase.GameState.Ended;
             ongoingGames.Remove(game);
-            await _db.InsertGame(game);
+            try
+            {
+                await _db.InsertGame(game);
+            }
+            catch(InvalidOperationException e)
+            {
+                _logger.LogCritical("Inserting game failed: {message}", e.Message);
+            }
         }
     }
 

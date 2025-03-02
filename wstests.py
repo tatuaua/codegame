@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 
-WEBSOCKET_URL = "ws://localhost:5000/ws"  # Change this to your WebSocket server URL
+WEBSOCKET_URL = "ws://localhost:5000/ws"
 
 def create_message(action, player_name, password, game_id=None, code=None):
     message = {"action": action, "player": {"name": player_name, "passWord": password}}
@@ -50,5 +50,4 @@ async def send_messages():
         message = await ws.recv()
         assert isinstance(message, str) and "error" in message, f"Unexpected message received: {message}"
 
-# Run the async function
 asyncio.run(send_messages())

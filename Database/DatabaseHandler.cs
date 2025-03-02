@@ -1,45 +1,45 @@
 ﻿using Game.Models;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Game.Database
 {
     public class DatabaseHandler : IDatabaseHandler
     {
-        private static readonly string connString = "Host=localhost;Port=5432;Username=postgres;Password=mypassword;Database=postgres";
         private static bool initialized = false;
         private readonly ILogger<DatabaseHandler> _logger;
+        private readonly IOptions<DatabaseSettings> _settings;
 
-        NpgsqlConnection conn = new NpgsqlConnection(connString);
+        NpgsqlConnection conn;
 
-        public DatabaseHandler(ILogger<DatabaseHandler> logger)
+        public DatabaseHandler(ILogger<DatabaseHandler> logger, IOptions<DatabaseSettings> settings)
         {
             if (initialized) throw new InvalidOperationException("Database already initialized, inject the service instead");
+            _logger = logger;
+            _settings = settings;
+            conn = new NpgsqlConnection(_settings.Value.ConnectionString ?? "Host=localhost;Port=5432;Username=postgres;Password=mypassword;Database=postgres");
             Init();
-            initialized = true;
-            this._logger = logger;
         }
 
         public void Init()
         {
             try
             {
+                initialized = true;
                 CreateTables();
-                Console.WriteLine("Initialized PostgreSQL database.");
+                _logger.LogInformation("Initialized PostgreSQL database.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error initializing database: " + ex.Message);
-            }
-            finally
-            {
-                conn.Close();
+                _logger.LogCritical(ex, "Failed to initialize the database. Application will now exit.");
+                throw; // Rethrow the exception to crash the app
             }
         }
 
         private void CreateTables()
         {
-            const string dropGames = @"DROP TABLE games;";
-            const string dropPlayers = @"DROP TABLE players;";
+            const string dropGames = @"DROP TABLE IF EXISTS games;";
+            const string dropPlayers = @"DROP TABLE IF EXISTS players;";
 
             const string createPlayersTableQuery = @"CREATE TABLE players (
                 id TEXT PRIMARY KEY,
@@ -77,7 +77,7 @@ namespace Game.Database
             await using var command = new NpgsqlCommand(query, conn);
             command.Parameters.AddWithValue("@id", game.Id);
             command.Parameters.AddWithValue("@player1", game.Player1.Id);
-            command.Parameters.AddWithValue("@player2", game.Player2.Id);
+            command.Parameters.AddWithValue("@player2", game.Player2?.Id ?? throw new InvalidOperationException("Player2 cannot be null."));
             command.Parameters.AddWithValue("@original_code", game.OriginalCode);
             command.Parameters.AddWithValue("@bugged_code", game.BuggedCode ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@fixed_code", game.FixedCode ?? (object)DBNull.Value);

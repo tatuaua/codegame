@@ -1,8 +1,12 @@
 using Game.Database;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IDatabaseHandler, DatabaseHandler>();
+builder.Services.Configure<DatabaseSettings>(
+    builder.Configuration.GetSection("DatabaseSettings")
+);
 
 var app = builder.Build();
 app.UseWebSockets();
