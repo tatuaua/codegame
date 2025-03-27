@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Net.Http;
-using Game.Database;
 using Game.Models;
+using Game.Database;
 
 public class GameWebSocketHandler
 {

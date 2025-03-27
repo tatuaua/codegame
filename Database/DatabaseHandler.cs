@@ -17,7 +17,7 @@ namespace Game.Database
             if (initialized) throw new InvalidOperationException("Database already initialized, inject the service instead");
             _logger = logger;
             _settings = settings;
-            conn = new NpgsqlConnection(_settings.Value.ConnectionString ?? "Host=localhost;Port=5432;Username=postgres;Password=mypassword;Database=postgres");
+            conn = new NpgsqlConnection(_settings.Value.ConnectionString ?? "Host=localhost;Port=5432;Username=myuser;Password=mypassword;Database=mydb");
             Init();
         }
 
