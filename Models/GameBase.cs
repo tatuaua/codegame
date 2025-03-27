@@ -25,8 +25,8 @@
             Player1: {Player1}
             Player2: {(Player2 != null ? Player2.ToString() : "None")}
             OriginalCode: {OriginalCode}
-            BuggedCode: {(BuggedCode ?? "None")}
-            FixedCode: {(FixedCode ?? "None")}
+            BuggedCode: {BuggedCode ?? "None"}
+            FixedCode: {FixedCode ?? "None"}
             State: {State}
             """;
         }

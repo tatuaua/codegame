@@ -15,7 +15,7 @@ namespace Game.Models
             Player ID: {Id}
             Name: {Name}
             IsInGame: {IsInGame}
-            Session: {(Session?.State.ToString() ?? "None")}
+            Session: {Session?.State.ToString() ?? "None"}
             """;
         }
     }
